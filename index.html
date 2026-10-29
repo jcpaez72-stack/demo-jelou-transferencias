@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Demo interactiva: cobro por transferencia con confirmación del banco en línea, sobre WhatsApp con Jelou.">
+<title>Demo Jelou Transferencias</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap">
+<style>
+:root{
+  --bg:#F3F7FA; --bgimg:linear-gradient(165deg,#FBFDFE 0%,#F1F5F9 55%,#E9EFF4 100%);
+  --panel:#FFFFFF; --fg:#1E2430; --muted:#596273; --faint:#9AA3B1; --pend:#C9D0DA;
+  --line:#E2E7EE; --accent:#1F4FD8; --accent-soft:#E4EBFC; --accent-fg:#FFFFFF; --chipbg:#EEF2F6;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1420; --bgimg:none; --panel:#171E2E; --fg:#ECEFF6; --muted:#A9B2C6; --faint:#7A8499; --pend:#3E4760;
+  --line:#28324A; --accent:#7FA2FF; --accent-soft:#1F2C4D; --accent-fg:#0E1424; --chipbg:#212B41; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1420; --bgimg:none; --panel:#171E2E; --fg:#ECEFF6; --muted:#A9B2C6; --faint:#7A8499; --pend:#3E4760;
+  --line:#28324A; --accent:#7FA2FF; --accent-soft:#1F2C4D; --accent-fg:#0E1424; --chipbg:#212B41; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg) var(--bgimg) fixed;color:var(--fg);font-family:Inter,system-ui,sans-serif;font-size:15px;min-height:100vh}
+[hidden]{display:none!important}
+.top{max-width:1120px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-left,0px)) 8px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{font-weight:800;font-size:19px;letter-spacing:-.3px}
+.brand span{color:var(--accent)}
+.brand small{display:block;font-weight:500;font-size:12.5px;color:var(--muted);letter-spacing:0;margin-top:2px}
+.scen{position:relative}
+.scen>button{display:flex;align-items:center;gap:10px;height:44px;padding:0 16px;border-radius:22px;border:1px solid var(--line);background:var(--panel);color:var(--fg);font:600 14px Inter,sans-serif;cursor:pointer}
+.scen .count{font-size:12px;font-weight:600;background:var(--chipbg);color:var(--muted);padding:2px 8px;border-radius:10px}
+.menu{position:absolute;right:0;top:50px;z-index:20;width:310px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px;box-shadow:0 12px 32px rgba(20,16,50,.16)}
+@media (max-width:640px){.menu{left:0;right:auto;width:min(310px,calc(100vw - 32px))}}
+.menu button{display:block;width:100%;text-align:left;border:none;background:none;color:var(--fg);padding:10px 12px;border-radius:9px;font:500 14px Inter,sans-serif;cursor:pointer}
+.menu button:hover,.menu button[aria-current="true"]{background:var(--accent-soft)}
+.menu small{display:block;color:var(--muted);font-size:12px;font-weight:400;margin-top:2px}
+.wrap{max-width:1120px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-left,0px)) 48px;display:flex;gap:48px;align-items:flex-start;flex-wrap:wrap;justify-content:center}
+.side{flex:1 1 360px;min-width:0;max-width:460px;padding-top:40px}
+.side h1{font-size:28px;line-height:1.15;margin:0 0 8px;letter-spacing:-.4px;text-wrap:balance}
+.side .desc{color:var(--muted);margin:0 0 22px;line-height:1.5}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.steps li button{display:flex;gap:14px;width:100%;text-align:left;border:none;background:none;color:var(--faint);padding:9px 8px;border-radius:10px;font:600 17px Inter,sans-serif;cursor:pointer;line-height:1.3;transition:color .35s}
+.steps li button:hover{background:var(--chipbg)}
+.dot{flex-shrink:0;width:18px;height:18px;border-radius:50%;border:2px solid var(--pend);margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .35s}
+.dot svg{display:none}
+.steps li.done button{color:var(--muted)}
+.steps li.done .dot{border-color:var(--faint)}
+.steps li.done .dot svg{display:block}
+.steps li.on button{color:var(--fg)}
+.steps li.on .dot{border-color:var(--accent);background:var(--accent);box-shadow:0 0 0 5px var(--accent-soft)}
+.steps .sd{display:none;font-weight:400;font-size:15px;color:var(--muted);margin-top:6px;line-height:1.5;animation:fade .4s}
+.steps li.on .sd{display:block}
+.ctrl{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{height:44px;padding:0 18px;border-radius:22px;border:1px solid var(--line);background:var(--panel);color:var(--fg);font:600 15px Inter,sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);color:var(--accent)}
+.btn:focus-visible,.speed button:focus-visible,.menu button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.speed{display:flex;gap:2px;border:1px solid var(--line);border-radius:22px;padding:4px;background:var(--panel)}
+.speed button{min-width:44px;height:34px;border:none;border-radius:17px;background:none;color:var(--muted);font:600 13px Inter,sans-serif;cursor:pointer}
+.speed button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.lbl{font-size:13px;color:var(--muted)}
+.foot{font-size:12.5px;color:var(--faint);line-height:1.5}
+
+/* ---------- PHONE (WhatsApp, always light) ---------- */
+.phone{flex:0 0 auto;width:min(380px,100%);background:#1C1C1E;border-radius:44px;padding:11px;box-shadow:0 24px 50px rgba(30,40,60,.16)}
+.scr{position:relative;height:760px;border-radius:34px;overflow:hidden;display:flex;flex-direction:column;background:#EFEAE2;font-family:Roboto,'Segoe UI',Inter,system-ui,sans-serif;color:#111B21}
+.sb{height:30px;flex-shrink:0;background:#008069;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:13px;font-weight:500}
+.hd{height:58px;flex-shrink:0;background:#008069;color:#fff;display:flex;align-items:center;gap:8px;padding:0 10px 0 6px}
+.av{width:38px;height:38px;border-radius:50%;background:#fff;color:#1F4FD8;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;letter-spacing:-.3px}
+.hn{flex:1;min-width:0;display:flex;flex-direction:column}
+.hn b{font-size:16.5px;font-weight:500;display:flex;align-items:center;gap:4px}
+.hn span{font-size:12.5px;color:#D6F2EC;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat{flex:1;overflow-y:auto;padding:10px 10px 14px;display:flex;flex-direction:column;gap:5px;scroll-behavior:smooth;
+  background-color:#EFEAE2;background-image:radial-gradient(rgba(84,101,111,.07) 1.2px,transparent 1.3px);background-size:18px 18px}
+.chat::-webkit-scrollbar{width:0}
+.m{max-width:84%;padding:6px 8px 7px 9px;font-size:15px;line-height:1.36;box-shadow:0 1px .5px rgba(11,20,26,.13);animation:pop .22s ease-out}
+.m.in{align-self:flex-start;background:#fff;border-radius:0 8px 8px 8px}
+.m.out{align-self:flex-end;background:#D9FDD3;border-radius:8px 0 8px 8px}
+.m.sys{color:#54656F;font-style:italic}
+.m.ok{border-left:4px solid #00A884}
+.m.bad{border-left:4px solid #E0563E}
+.tm{float:right;display:inline-flex;align-items:center;gap:3px;font-size:11px;color:#667781;margin:8px 0 -5px 10px;font-style:normal}
+.chip{align-self:center;background:#fff;color:#54656F;font-size:12px;padding:5px 12px;border-radius:7.5px;box-shadow:0 1px .5px rgba(11,20,26,.13);text-align:center;max-width:88%}
+.chip.y{background:#FFEECD}
+.grp{align-self:flex-start;width:84%;display:flex;flex-direction:column;gap:2px;animation:pop .22s ease-out}
+.grp .m{max-width:none;animation:none;border-radius:0 8px 3px 3px}
+.qb{min-height:42px;background:#fff;border:none;border-radius:3px;color:#027EB5;font:500 14.5px Roboto,Inter,sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 1px .5px rgba(11,20,26,.13);cursor:pointer}
+.qb:last-child{border-radius:3px 3px 8px 8px}
+.code{display:inline-block;font-family:'Roboto Mono',Consolas,monospace;font-weight:700;letter-spacing:1px;background:#F0F4F8;color:#111B21;padding:2px 8px;border-radius:5px;font-size:15px}
+.acct{margin:4px 0 2px;background:#F5F7F9;border-radius:6px;padding:7px 9px;font-size:13.5px;line-height:1.5}
+.acct b{display:block;font-size:12px;color:#667781;font-weight:500}
+.typing{align-self:flex-start;background:#fff;border-radius:0 8px 8px 8px;padding:10px 12px;display:flex;gap:4px;box-shadow:0 1px .5px rgba(11,20,26,.13)}
+.typing i{width:7px;height:7px;border-radius:50%;background:#8696A0;animation:bl 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+.cmp{flex-shrink:0;padding:6px 8px 10px;display:flex;align-items:center;gap:6px;position:relative}
+.pill{flex:1;height:46px;background:#fff;border-radius:23px;display:flex;align-items:center;gap:10px;padding:0 12px;color:#8696A0;font-size:15.5px;min-width:0}
+.pill .txt{flex:1;color:#111B21;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill .txt:empty:before{content:"Mensaje";color:#8696A0}
+.mic{width:46px;height:46px;border-radius:50%;border:none;background:#00A884;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hint{position:absolute;left:50%;bottom:66px;transform:translateX(-50%);background:#111B21;color:#fff;border:none;border-radius:20px;padding:0 16px;height:40px;font:600 13.5px Inter,sans-serif;white-space:nowrap;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.25);animation:pulse 1.4s infinite;z-index:6}
+.tapme{outline:3px solid #00A884;outline-offset:-3px;animation:pulse 1.4s infinite}
+
+/* sheets: Jelou web page and bank app */
+.sheet{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;background:rgba(11,20,26,.42);animation:fade .2s}
+.sheet .sh{margin-top:auto;background:#fff;border-radius:14px 14px 0 0;display:flex;flex-direction:column;max-height:94%;animation:up .28s ease-out;overflow:hidden}
+.sheet.full .sh{height:94%}
+.sheet.app .sh{height:100%;max-height:100%;border-radius:0;margin-top:0}
+.shh{height:52px;flex-shrink:0;display:flex;align-items:center;padding:0 8px;border-bottom:1px solid #E9EDEF;gap:6px}
+.shh b{flex:1;text-align:center;font-size:16px;font-weight:500;margin-right:36px}
+.shf{flex-shrink:0;padding:12px 18px 16px;border-top:1px solid #E9EDEF;display:flex;flex-direction:column;gap:8px}
+.cta{height:46px;border:none;border-radius:23px;background:#008069;color:#fff;font:600 15px Roboto,Inter,sans-serif;cursor:pointer}
+.mini{text-align:center;font-size:11.5px;color:#667781}
+/* jelou dark web page */
+.jw{flex:1;background:#0E1424;color:#F1F4F9;padding:18px 18px 10px;display:flex;flex-direction:column;gap:12px;font-family:Inter,sans-serif;overflow:hidden}
+.jw .lg{font-weight:800;font-size:18px;color:#7FA2FF;letter-spacing:-.3px}
+.jw h3{margin:0;font-size:22px;font-weight:700}
+.jw .st{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#A9B2C6;margin-top:4px}
+.jw .st i{width:18px;height:18px;border-radius:50%;background:#1F2C4D;color:#7FA2FF;font-style:normal;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.jw .box{background:#171E2E;border:1px solid #28324A;border-radius:12px;padding:4px 12px}
+.jw .r{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #28324A;font-size:14px}
+.jw .r:last-child{border:none}
+.jw .r b{display:block;font-size:11.5px;color:#7A8499;font-weight:500}
+.jw .cp{font-size:11.5px;background:#28324A;color:#F1F4F9;padding:4px 9px;border-radius:7px;font-weight:600}
+.jw .cp.on{background:#1F4FD8}
+.jw .big{font-family:'Roboto Mono',Consolas,monospace;font-size:24px;font-weight:700;letter-spacing:2px}
+.jw .back{margin-top:auto;height:44px;border-radius:10px;border:1px solid #28324A;background:none;color:#F1F4F9;font:600 14px Inter,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}
+/* bank app */
+.bk{flex:1;display:flex;flex-direction:column;font-family:Inter,sans-serif;color:#111;background:#fff;overflow:hidden}
+.bk .bh{padding:14px 18px 12px;color:#fff;display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:15px}
+.bk .bh small{display:block;font-weight:500;font-size:11.5px;opacity:.85;margin-top:2px}
+.bk .bb{flex:1;padding:16px 18px;display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.bk .amt{text-align:center;font-size:44px;font-weight:800;letter-spacing:-1px;margin:8px 0 0}
+.bk .sub{text-align:center;font-size:12.5px;color:#667781}
+.bk .fl{display:flex;flex-direction:column;gap:4px}
+.bk .fl span{font-size:12px;color:#667781}
+.bk .fl div{min-height:44px;border:1px solid #D1D7DB;border-radius:8px;padding:10px 12px;font-size:14.5px;line-height:1.3}
+.bk .fl div.mono{font-family:'Roboto Mono',Consolas,monospace;font-weight:700;letter-spacing:1px}
+.bk .slide{margin-top:auto;height:50px;border-radius:25px;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;position:relative;cursor:pointer;border:none;width:100%}
+.bk .slide i{position:absolute;left:5px;top:5px;width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center}
+.bk .okc{width:72px;height:72px;border-radius:50%;margin:18px auto 6px;display:flex;align-items:center;justify-content:center}
+.bk .rc{background:#F5F7F9;border-radius:10px;padding:12px 14px;font-size:13.5px;line-height:1.5}
+.bk .rc b{display:block;font-size:11.5px;color:#667781;font-weight:500;margin-top:6px}
+.bk .rc b:first-child{margin-top:0}
+.bk .bf{padding:12px 18px 16px}
+.bk .cta2{height:46px;border:none;border-radius:10px;color:#fff;font:600 15px Inter,sans-serif;width:100%;cursor:pointer}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes bl{0%,60%,100%{opacity:.35}30%{opacity:1}}
+@keyframes fade{from{opacity:0}}
+@keyframes up{from{transform:translateY(40px);opacity:.4}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,168,132,.5)}50%{box-shadow:0 0 0 8px rgba(0,168,132,0)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important}}
+
+/* ---------- REEL MODE (video 1080x1920) ---------- */
+body.reel{margin:0;width:1080px;height:1920px;overflow:hidden;background:linear-gradient(165deg,#FBFDFE 0%,#F1F5F9 55%,#E8EEF3 100%);color:#1E2430;
+  --fg:#1E2430;--muted:#596273;--faint:#9AA3B1;--pend:#C9D0DA;--accent:#1F4FD8;--accent-soft:#E4EBFC;--panel:#fff;--line:#E2E7EE;--chipbg:#EEF2F6}
+body.reel .top{position:absolute;left:0;right:0;top:64px;max-width:none;padding:0 60px}
+body.reel .brand{font-size:44px;letter-spacing:-1px}
+body.reel .brand small{font-size:24px;margin-top:6px}
+body.reel .scen>button{height:72px;padding:0 28px;border-radius:36px;font-size:26px;gap:14px}
+body.reel .scen>button svg{width:24px;height:24px}
+body.reel .scen .count{font-size:20px;padding:4px 12px;border-radius:14px}
+body.reel .wrap{position:absolute;inset:0;padding:0;display:block;max-width:none}
+body.reel .phone{position:absolute;left:44px;top:380px;width:380px;transform:scale(1.45);transform-origin:top left;box-shadow:0 30px 60px rgba(30,40,60,.18)}
+body.reel .side{position:absolute;left:640px;top:470px;width:400px;max-width:none;padding:0}
+body.reel .side h1{font-size:42px;letter-spacing:-.8px;margin-bottom:14px}
+body.reel .side .desc{font-size:24px;line-height:1.45;margin-bottom:34px}
+body.reel .steps{gap:10px}
+body.reel .steps li button{font-size:28px;gap:20px;padding:8px 0;cursor:default}
+body.reel .dot{width:28px;height:28px;border-width:3px;margin-top:3px}
+body.reel .dot svg{width:15px;height:15px}
+body.reel .steps li.on .dot{box-shadow:0 0 0 8px var(--accent-soft)}
+body.reel .steps .sd{font-size:23px;margin-top:10px}
+body.reel .ctrl{display:none}
+.rend{display:none}
+body.reel .rend.show{display:flex;position:absolute;inset:0;z-index:30;background:linear-gradient(165deg,#FBFDFE 0%,#EEF2F7 100%);flex-direction:column;align-items:center;justify-content:center;gap:34px;text-align:center;padding:0 90px;animation:fade .5s;color:#1E2430}
+.rend .lg{font:800 130px Inter,sans-serif;letter-spacing:-4px}
+.rend .lg span{color:#1F4FD8}
+.rend .tg{font:700 64px/1.12 Inter,sans-serif;letter-spacing:-1.5px;text-wrap:balance}
+.rend .sm{font:500 34px Inter,sans-serif;color:#596273}
+.rend .xt{margin-top:20px;font:700 30px Inter,sans-serif;color:#1F4FD8;letter-spacing:4px;text-transform:uppercase}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">Jelou <span>×</span> Transferencias<small>Cobro por transferencia con confirmación del banco · demo de flujo</small></div>
+  <div class="scen">
+    <button id="scenBtn" aria-haspopup="true" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>Escenarios <span class="count" id="scenCount">1 de 4</span></button>
+    <div class="menu" id="menu" hidden></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="phone">
+    <div class="scr" id="scr">
+      <div class="sb"><span id="clock">17:31</span><span style="display:flex;gap:6px;align-items:center"><svg width="15" height="12" viewBox="0 0 24 18" fill="#fff" aria-hidden="true"><path d="M12 18l4-5a6 6 0 0 0-8 0zM4 9l2.5 3a9 9 0 0 1 11 0L20 9a13 13 0 0 0-16 0zM0 4.5l2.5 3a15 15 0 0 1 19 0L24 4.5a19 19 0 0 0-24 0z"/></svg><svg width="22" height="12" viewBox="0 0 26 12" aria-hidden="true"><rect x=".5" y=".5" width="22" height="11" rx="3" fill="none" stroke="#fff"/><rect x="2" y="2" width="16" height="8" rx="1.5" fill="#fff"/><rect x="23.5" y="4" width="2" height="4" rx="1" fill="#fff"/></svg></span></div>
+      <div class="hd">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+        <div class="av">jelou</div>
+        <div class="hn"><b>Jelou Sandbox <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path fill="#25D366" d="M12 1l2.6 2.2 3.4-.4.9 3.3 3 1.7-1.3 3.2 1.3 3.2-3 1.7-.9 3.3-3.4-.4L12 23l-2.6-2.2-3.4.4-.9-3.3-3-1.7L3.4 13 2.1 9.8l3-1.7.9-3.3 3.4.4z"/><path d="M8 12l3 3 5-6" stroke="#fff" stroke-width="2" fill="none"/></svg></b><span>Jelou Apps · Cuenta de empresa</span></div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
+      </div>
+      <div class="chat" id="chat"></div>
+      <div class="cmp">
+        <div class="pill"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8696A0" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/></svg><span class="txt" id="draft"></span><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#8696A0" stroke-width="2" aria-hidden="true"><path d="M21 11l-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 7"/></svg><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#8696A0" stroke-width="2" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></div>
+        <div class="mic" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div>
+      </div>
+    </div>
+  </div>
+  <section class="side" aria-live="polite">
+    <h1 id="title"></h1>
+    <p class="desc" id="desc"></p>
+    <ol class="steps" id="steps"></ol>
+    <div class="ctrl">
+      <div class="row">
+        <button class="btn pri" id="play"></button>
+        <button class="btn" id="try" aria-pressed="false">Probar yo</button>
+        <button class="btn" id="step">Paso a paso →</button>
+        <button class="btn" id="reset" aria-label="Reiniciar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg></button>
+      </div>
+      <div class="row"><span class="lbl">Velocidad</span><div class="speed" id="speed"></div></div>
+      <p class="foot" id="foot">La cuenta y el titular del cobro aparecen enmascarados. El código de pago y los montos son de ejemplo. El flujo con Banco Guayaquil ya está en pruebas reales; Pacífico y Produbanco se muestran con la misma mecánica.</p>
+    </div>
+  </section>
+  <div class="rend" id="rend"><div class="lg">jelou<span>.</span></div><div class="tg" id="rendTg">Cobra por transferencia y confírmalo con el banco</div><div class="sm" id="rendSm">Código único · pago desde cualquier banco · confirmación en línea</div><div class="xt" id="rendXt">Pago por transferencia</div></div>
+</main>
+
+<script>
+(function(){
+const TICK='<svg width="16" height="11" viewBox="0 0 16 11" fill="none" stroke="#53BDEB" stroke-width="1.6" aria-hidden="true"><path d="M1 6l3 3 6-7M6 8l1 1 7-8"/></svg>';
+const EXT='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#027EB5" stroke-width="2" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
+const X='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#54656F" stroke-width="2.2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+const CHK='<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>';
+
+// ---------- bancos (sin logotipos; color de referencia y nombre de la app) ----------
+const BANKS={
+  pacifico:{name:'Banco del Pacífico',short:'Pacífico',app:'Banca Móvil Pacífico',color:'#0A4FBF',acct:'Cuenta corriente ••••4471',from:'AHO ••••1579 · $311,22'},
+  produbanco:{name:'Produbanco',short:'Produbanco',app:'Produbanco Móvil',color:'#00843D',acct:'Cuenta corriente ••••8830',from:'AHO ••••1579 · $311,22'},
+  guayaquil:{name:'Banco Guayaquil',short:'Guayaquil',app:'Banco Guayaquil app',color:'#D6006E',acct:'Cuenta corriente ••••6620',from:'AHO ••••1579 · $311,22'}
+};
+const AMT='$1,00', CODE='GP7NR8', ITEM='Plan Starter · 1 mes';
+
+function sheetHead(t){return '<div class="shh"><span style="width:36px;display:flex;justify-content:center">'+X+'</span><b>'+t+'</b></div>';}
+function jelouPage(b){
+  return '<div class="shh"><span style="width:36px;display:flex;justify-content:center">'+X+'</span><b style="display:flex;flex-direction:column;line-height:1.2">WhatsApp<small style="font-size:11.5px;color:#667781;font-weight:400">pago-transferencia.jelou.ai</small></b></div>'+
+  '<div class="jw"><div class="lg">jelou.</div><h3>Transfiere '+AMT+'</h3>'+
+  '<div class="st"><i>1</i>Copia los datos de la cuenta</div>'+
+  '<div class="box"><div class="r"><span><b>Banco</b>'+b.name+'</span></div><div class="r"><span><b>'+b.acct.split(' ••••')[0]+'</b>'+b.acct.replace(/.*(••••\d+)/,'$1')+'</span><span class="cp">Copiar</span></div><div class="r"><span><b>Titular</b>JELOU S.A.</span><span class="cp">Copiar</span></div><div class="r"><span><b>RUC</b>099••••••001</span><span class="cp">Copiar</span></div></div>'+
+  '<div class="st"><i>2</i>Escribe este código en el motivo</div>'+
+  '<div class="box"><div class="r"><span><b>Motivo</b><span class="big">'+CODE+'</span></span><span class="cp on">Copiar</span></div><div style="font-size:11.5px;color:#7A8499;padding:2px 0 8px">Solo este código, sin otras palabras.</div></div>'+
+  '<div class="st"><i>3</i>Listo, te confirmamos en el chat</div>'+
+  '<button class="back" data-go>Volver a WhatsApp</button></div>';
+}
+function bankPay(b){
+  return '<div class="bk"><div class="bh" style="background:'+b.color+'"><span>'+b.app+'<small>Transferencia a otra cuenta</small></span><span style="font-weight:500;font-size:13px">Cerrar</span></div>'+
+  '<div class="bb"><div class="amt">'+AMT+'</div><div class="sub">Total '+AMT+' · sin costo</div>'+
+  '<div class="fl"><span>Desde</span><div>'+b.from+'</div></div>'+
+  '<div class="fl"><span>Para</span><div>JELOU S.A.<br><span style="font-size:12.5px;color:#667781">'+b.name+' · '+b.acct+'</span></div></div>'+
+  '<div class="fl"><span>Motivo</span><div class="mono">'+CODE+'</div></div>'+
+  '<button class="slide" data-go style="background:'+b.color+'"><i><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="'+b.color+'" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i>Desliza para pagar</button></div></div>';
+}
+function bankDone(b){
+  return '<div class="bk"><div class="bh" style="background:'+b.color+'"><span>'+b.app+'<small>Comprobante</small></span></div>'+
+  '<div class="bb" style="align-items:center;text-align:center"><div class="okc" style="background:'+b.color+'">'+CHK+'</div><div style="font-size:22px;font-weight:800">¡Listo!</div><div style="font-size:12.5px;color:#667781">Transferencia inmediata enviada</div>'+
+  '<div class="amt" style="font-size:36px;margin:4px 0">'+AMT+'</div>'+
+  '<div class="rc" style="width:100%;text-align:left"><b>Para</b>JELOU S.A. · '+b.name+' '+b.acct.replace(/.*(••••\d+)/,'$1')+'<b>Motivo</b>'+CODE+'<b>Tipo</b>Transferencia inmediata · interbancaria<b>ID de transacción</b>00113142[21]</div></div>'+
+  '<div class="bf"><button class="cta2" data-go style="background:'+b.color+'">Volver a WhatsApp</button></div></div>';
+}
+const SHEETS={};
+Object.keys(BANKS).forEach(k=>{const b=BANKS[k];SHEETS['jw-'+k]={full:1,h:jelouPage(b)};SHEETS['pay-'+k]={app:1,h:bankPay(b)};SHEETS['done-'+k]={app:1,h:bankDone(b)};});
+
+const START=[{k:'chip',h:'Esta empresa usa un servicio seguro de Meta para administrar este chat.',y:1},{k:'chip',h:'HOY'}];
+
+function acctMsg(b){
+  return 'Transfiere <b>'+AMT+'</b> a esta cuenta de <b>'+b.name+'</b>:<div class="acct"><b>'+b.acct.split(' ••••')[0]+'</b>'+b.acct.replace(/.*(••••\d+)/,'$1')+'<b>Titular</b>JELOU S.A.<b>RUC</b>099••••••001</div>✏️ En el motivo escribe solo: <span class="code">'+CODE+'</span>';
+}
+function flowOK(k,latency){
+  const b=BANKS[k];
+  return [
+   {s:0,k:'out',h:'Hola',hint:'Escribir «Hola»'},
+   {s:0,k:'in',h:'<b>'+ITEM+'</b><br>Total: <b>'+AMT+'</b><br><br>¿Cómo quieres pagar?',b:['Transferencia','Tarjeta']},
+   {s:0,k:'out',h:'Transferencia',hint:'Tocar «Transferencia»',tap:'Transferencia'},
+   {s:1,k:'in',h:acctMsg(b),b:['Copiar datos'],ext:1},
+   {s:2,k:'sheet',id:'jw-'+k,hint:'Tocar «Copiar datos»',tap:'Copiar datos'},
+   {s:2,k:'close',hint:'Tocar «Volver a WhatsApp»'},
+   {s:2,k:'in',h:'Te aviso aquí apenas llegue tu pago. Tienes <b>15 minutos</b>; después el código vence.',fast:1},
+   {s:3,k:'sheet',id:'pay-'+k,hint:'Abrir '+b.app,chip:'Abre la app de tu banco'},
+   {s:3,k:'swap',id:'done-'+k,hint:'Deslizar para pagar'},
+   {s:3,k:'close',hint:'Tocar «Volver a WhatsApp»'},
+   {s:4,k:'in',h:'Esperando confirmación de '+b.name+'…',cls:'sys',fast:1},
+   {s:4,k:'in',h:'<b>'+b.name+'</b> confirmó el crédito en la cuenta de Jelou<br>Motivo: '+CODE+' · Monto: '+AMT+'<br>Latencia: '+latency,cls:'sys',fast:1},
+   {s:5,k:'in',h:'✅ <b>Pago recibido</b><br>'+AMT+' · Código '+CODE+'. ¡Gracias!',cls:'ok'},
+   {s:5,k:'in',h:'<b>'+ITEM+'</b> activado.<br>Tu comprobante llegará a tu correo.',b:['Ver mi plan','Volver al inicio']}
+  ];
+}
+function flowFail(k){
+  const b=BANKS[k];
+  return [
+   {s:0,k:'out',h:'Hola',hint:'Escribir «Hola»'},
+   {s:0,k:'in',h:'<b>'+ITEM+'</b><br>Total: <b>'+AMT+'</b><br><br>¿Cómo quieres pagar?',b:['Transferencia','Tarjeta']},
+   {s:0,k:'out',h:'Transferencia',hint:'Tocar «Transferencia»',tap:'Transferencia'},
+   {s:1,k:'in',h:acctMsg(b),b:['Copiar datos'],ext:1},
+   {s:1,k:'in',h:'Te aviso aquí apenas llegue tu pago. Tienes <b>15 minutos</b>; después el código vence.',fast:1},
+   {s:2,k:'chip',h:'5 MINUTOS DESPUÉS',clock:'17:36'},
+   {s:2,k:'in',h:'Aún no vemos tu transferencia en '+b.name+'. Si ya la hiciste, revisa que el motivo sea exactamente <span class="code">'+CODE+'</span>.',cls:'sys'},
+   {s:3,k:'chip',h:'15 MINUTOS DESPUÉS',clock:'17:46'},
+   {s:3,k:'in',h:'⏱ <b>Código vencido</b><br>No recibimos el pago de '+AMT+'. Tu pedido quedó <b>por cobrar</b> y no se activó nada.',cls:'bad'},
+   {s:3,k:'in',h:'¿Quieres intentarlo de nuevo? Te genero un código nuevo.',b:['Generar nuevo código','Cancelar pedido']},
+   {s:4,k:'out',h:'Generar nuevo código',hint:'Tocar «Generar nuevo código»',tap:'Generar nuevo código'},
+   {s:4,k:'in',h:acctMsg(b).replace(CODE,'QM4T2R'),b:['Copiar datos'],ext:1}
+  ];
+}
+const STEPS_OK=(b)=>[
+  ['El cliente elige pagar por transferencia','Desde el chat, sin instalar nada. Jelou crea un pedido por cobrar con un código único.'],
+  ['Jelou entrega cuenta y código','Cuenta de Jelou en '+b.name+' y el código que el cliente debe escribir en el motivo. Un toque copia todo.'],
+  ['Página de pago con los datos listos','El cliente copia cuenta, titular y código. No tiene que teclear nada a mano.'],
+  ['Paga desde su propio banco','Transferencia inmediata desde cualquier banco o cooperativa. El dinero entra directo a la cuenta en '+b.name+'.'],
+  [b.name+' confirma el crédito','El banco expone el movimiento con el motivo a Jelou por API. Es la única fuente de verdad: sin capturas ni comprobantes del cliente.'],
+  ['Pago recibido y pedido activado','Jelou cruza código y monto, marca el pedido como pagado y avisa en el chat en segundos.']
+];
+const SC=[
+ {id:'pacifico',name:'Banco del Pacífico',sub:'Cobro confirmado por el banco',title:'Cobro por transferencia con Banco del Pacífico',desc:'El cliente paga desde su banco y Jelou activa el pedido solo cuando Banco del Pacífico confirma que el dinero ya está en la cuenta.',steps:STEPS_OK(BANKS.pacifico),ev:flowOK('pacifico','4 s'),
+  rend:['Cobra por transferencia y confírmalo con Banco del Pacífico','Código único · pago desde cualquier banco · confirmación en línea','Jelou × Banco del Pacífico']},
+ {id:'produbanco',name:'Produbanco',sub:'Cobro confirmado por el banco',title:'Cobro por transferencia con Produbanco',desc:'El cliente paga desde su banco y Jelou activa el pedido solo cuando Produbanco confirma que el dinero ya está en la cuenta.',steps:STEPS_OK(BANKS.produbanco),ev:flowOK('produbanco','5 s'),
+  rend:['Cobra por transferencia y confírmalo con Produbanco','Código único · pago desde cualquier banco · confirmación en línea','Jelou × Produbanco']},
+ {id:'guayaquil',name:'Banco Guayaquil',sub:'Flujo ya en pruebas reales',title:'Lo que ya funciona hoy con Banco Guayaquil',desc:'Este es el flujo que Jelou está probando en producción: la misma mecánica que proponemos replicar con cada banco.',steps:STEPS_OK(BANKS.guayaquil),ev:flowOK('guayaquil','6 s'),
+  rend:['Ya está funcionando con Banco Guayaquil','La misma mecánica, lista para replicar','Jelou × Banco Guayaquil']},
+ {id:'vencido',name:'Pago no llega',sub:'El pedido queda por cobrar',title:'Si el pago no llega, nada se activa',desc:'El código vence a los 15 minutos. Sin confirmación del banco el pedido queda por cobrar: no hay entrega sin dinero en la cuenta.',
+  steps:[['El cliente elige transferencia','Recibe cuenta y código como siempre.'],['Jelou espera la confirmación','Consulta los créditos de la cuenta mientras el código está vigente.'],['Recordatorio a los 5 minutos','Si no aparece el crédito, se le recuerda al cliente el motivo exacto.'],['Código vencido, pedido por cobrar','Nada se activa ni se entrega. El pedido queda en estado por cobrar.'],['Nuevo intento con código nuevo','Un toque genera otro código; el anterior ya no se acepta.']],ev:flowFail('pacifico'),
+  rend:['Sin confirmación del banco, nada se entrega','Código vence · pedido por cobrar · nuevo intento','Jelou × Pago por transferencia']}
+];
+
+// ---------- engine ----------
+const $=id=>document.getElementById(id);
+const chat=$('chat'),scr=$('scr');
+let sc=0,ptr=0,playing=false,mode='auto',speed=1,timer=null,waiting=null,stopAtStep=null,minute=31,hour=17,curStep=-1,reel=false,ended=false;
+const SPEEDS=[0.5,1,1.5,2,4];
+function pad(n){return (n<10?'0':'')+n;}
+function clock(){return hour+':'+pad(minute);}
+function tickClock(){minute++;if(minute>59){minute=0;hour++;}$('clock').textContent=clock();}
+function evs(){return SC[sc].ev;}
+function scrollDown(){chat.scrollTop=chat.scrollHeight;}
+function clearTimer(){if(timer){clearTimeout(timer);timer=null;}}
+function closeSheet(){const s=scr.querySelector('.sheet');if(s)s.remove();}
+function removeHint(){const h=scr.querySelector('.hint');if(h)h.remove();scr.querySelectorAll('.tapme').forEach(e=>e.classList.remove('tapme'));}
+function removeTyping(){const t=chat.querySelector('.typing');if(t)t.remove();}
+
+function bubble(e){
+  if(e.k==='chip'){const c=document.createElement('div');c.className='chip'+(e.y?' y':'');c.innerHTML=e.h;if(e.clock){const p=e.clock.split(':');hour=+p[0];minute=+p[1];$('clock').textContent=e.clock;}return c;}
+  const out=e.k==='out';
+  const tm='<span class="tm">'+clock()+(out?TICK:'')+'</span>';
+  const m=document.createElement('div');
+  m.className='m '+(out?'out':'in')+(e.cls?' '+e.cls:'');
+  m.innerHTML=e.h+tm;
+  if(e.b){
+    const g=document.createElement('div');g.className='grp';g.appendChild(m);
+    e.b.forEach(l=>{const b=document.createElement('button');b.className='qb';b.dataset.tap=l;b.innerHTML=(e.ext?EXT:'')+l;g.appendChild(b);});
+    return g;
+  }
+  return m;
+}
+function openSheet(id){
+  closeSheet();const d=SHEETS[id];const s=document.createElement('div');
+  s.className='sheet'+(d.full?' full':'')+(d.app?' app':'');s.innerHTML='<div class="sh">'+d.h+'</div>';scr.appendChild(s);
+}
+function apply(e,instant){
+  if(e.s!=null&&!instant)setStep(e.s);
+  if(e.k==='sheet'||e.k==='swap'){if(!instant){if(e.chip){const c=document.createElement('div');c.className='chip';c.textContent=e.chip;chat.appendChild(c);scrollDown();}openSheet(e.id);}return;}
+  if(e.k==='close'){closeSheet();return;}
+  removeTyping();
+  const n=bubble(e);chat.appendChild(n);
+  if(e.k!=='chip'&&!e.fast)tickClock();
+  if(instant)chat.querySelectorAll('.m,.grp').forEach(x=>x.style.animation='none');
+  scrollDown();
+}
+function setStep(i){
+  if(i===curStep)return;curStep=i;
+  const lis=$('steps').children;
+  for(let k=0;k<lis.length;k++){lis[k].className=k<i?'done':(k===i?'on':'');}
+}
+function delayFor(e){
+  let base=e.k==='out'?900:(e.k==='sheet'?2800:(e.k==='swap'?2600:(e.k==='close'?500:1500)));
+  if(e.k==='in'&&!e.fast)base+=Math.min(1600,(e.h.replace(/<[^>]+>/g,'').length)*14);
+  if(e.k==='chip')base=900;
+  if(e.fast)base=1100;
+  return base/speed;
+}
+function needsTap(e){return mode==='try'&&(e.k==='out'&&e.hint||e.k==='sheet'||e.k==='swap'||e.k==='close');}
+function showHint(e,cb){
+  removeHint();
+  let target=null;
+  if(e.tap){scr.querySelectorAll('[data-tap]').forEach(b=>{if(b.dataset.tap===e.tap)target=b;});}
+  if(e.k==='close'||e.k==='swap'){target=scr.querySelector('.sheet [data-go]');}
+  const go=()=>{removeHint();waiting=null;cb();};
+  if(target){target.classList.add('tapme');target.style.cursor='pointer';target.onclick=go;}
+  if(e.k!=='close'&&e.k!=='swap'){const h=document.createElement('button');h.className='hint';h.textContent=e.hint||'Continuar';h.onclick=go;scr.appendChild(h);}
+  waiting=go;
+}
+function typeDraft(text,cb){
+  const d=$('draft');let i=0;const t=text.replace(/<[^>]+>/g,'');
+  const step=()=>{d.textContent=t.slice(0,++i);if(i<t.length)timer=setTimeout(step,Math.max(12,38/speed));else timer=setTimeout(()=>{d.textContent='';cb();},180/speed);};
+  step();
+}
+function next(){
+  clearTimer();
+  const E=evs();
+  if(ptr>=E.length){playing=false;ended=true;renderPlay();if(reel){$('rend').classList.add('show');window.__reelDone=true;}return;}
+  const e=E[ptr];
+  if(e.s!=null&&e.s!==curStep){
+    if(mode==='step'&&stopAtStep!==null&&e.s>stopAtStep){playing=false;renderPlay();stopAtStep=null;return;}
+  }
+  const run=()=>{
+    ptr++;
+    if(e.k==='in'&&!e.fast){
+      chat.appendChild(Object.assign(document.createElement('div'),{className:'typing',innerHTML:'<i></i><i></i><i></i>'}));scrollDown();
+      timer=setTimeout(()=>{apply(e);schedule(e);},Math.min(1100,500+e.h.length*3)/speed);
+    } else if(e.k==='out'&&!e.fast&&mode!=='try'&&!e.tap){
+      typeDraft(e.h,()=>{apply(e);schedule(e);});
+    } else {apply(e);schedule(e);}
+  };
+  if(needsTap(e)){showHint(e,()=>{if(playing||mode==='try')run();});}
+  else run();
+}
+function schedule(e){if(!playing)return;timer=setTimeout(next,delayFor(e));}
+function renderPlay(){
+  const b=$('play');
+  b.innerHTML=playing?'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="5" y="4" width="5" height="16" rx="1"/><rect x="14" y="4" width="5" height="16" rx="1"/></svg>Pausa':'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4l13 8-13 8z"/></svg>'+(ended?'Repetir':'Reproducir');
+  $('try').setAttribute('aria-pressed',mode==='try'?'true':'false');
+}
+function reset(keepMode){
+  clearTimer();removeHint();closeSheet();chat.innerHTML='';$('draft').textContent='';
+  ptr=0;curStep=-1;hour=17;minute=31;$('clock').textContent=clock();ended=false;waiting=null;$('rend').classList.remove('show');
+  if(!keepMode)mode='auto';
+  START.forEach(e=>apply(e,true));
+  setStep(0);
+  renderPlay();
+}
+function jumpTo(stepIdx){
+  const wasPlaying=playing;playing=false;reset(true);
+  const E=evs();
+  while(ptr<E.length&&E[ptr].s<stepIdx){const e=E[ptr];if(e.k!=='sheet'&&e.k!=='swap'&&e.k!=='close')apply(e,true);ptr++;}
+  closeSheet();setStep(stepIdx);
+  playing=wasPlaying||mode==='try';renderPlay();if(playing)next();
+}
+function loadScenario(i,fromHash){
+  playing=false;sc=i;
+  const S=SC[i];$('title').textContent=S.title;$('desc').textContent=S.desc;$('scenCount').textContent=(i+1)+' de '+SC.length;
+  $('rendTg').textContent=S.rend[0];$('rendSm').textContent=S.rend[1];$('rendXt').textContent=S.rend[2];
+  $('steps').innerHTML='';
+  S.steps.forEach((st,k)=>{const li=document.createElement('li');const b=document.createElement('button');b.innerHTML='<span class="dot"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-5"/></svg></span><span>'+st[0]+'<span class="sd">'+st[1]+'</span></span>';b.onclick=()=>jumpTo(k);li.appendChild(b);$('steps').appendChild(li);});
+  reset();
+  document.querySelectorAll('#menu button').forEach((b,k)=>b.setAttribute('aria-current',k===i?'true':'false'));
+  if(!fromHash&&!reel){try{history.replaceState(null,'','#'+S.id);}catch(e){}}
+}
+// controls
+$('play').onclick=()=>{
+  if(ended){reset(true);}
+  if(mode==='try'){mode='auto';}
+  playing=!playing;removeHint();
+  if(playing){if(waiting){const w=waiting;waiting=null;w();}else next();}else clearTimer();
+  renderPlay();
+};
+$('try').onclick=()=>{mode=mode==='try'?'auto':'try';playing=mode==='try';reset(true);renderPlay();if(playing)next();};
+$('step').onclick=()=>{
+  if(ended)reset(true);
+  mode='step';removeHint();
+  const E=evs();
+  stopAtStep=ptr<E.length?E[ptr].s:curStep;
+  playing=true;renderPlay();
+  if(waiting){const w=waiting;waiting=null;w();}else next();
+};
+$('reset').onclick=()=>{playing=false;reset();};
+SPEEDS.forEach(v=>{const b=document.createElement('button');b.textContent=v+'×';b.setAttribute('aria-pressed',v===1?'true':'false');b.onclick=()=>{speed=v;document.querySelectorAll('#speed button').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));};$('speed').appendChild(b);});
+const menu=$('menu');
+SC.forEach((s,i)=>{const b=document.createElement('button');b.innerHTML=(i+1)+'. '+s.name+'<small>'+s.sub+'</small>';b.onclick=()=>{menu.hidden=true;$('scenBtn').setAttribute('aria-expanded','false');loadScenario(i);};menu.appendChild(b);});
+$('scenBtn').onclick=()=>{menu.hidden=!menu.hidden;$('scenBtn').setAttribute('aria-expanded',String(!menu.hidden));};
+document.addEventListener('click',e=>{if(!e.target.closest('.scen')){menu.hidden=true;$('scenBtn').setAttribute('aria-expanded','false');}});
+
+let h='';try{h=(location.hash||'').slice(1);}catch(e){}
+let idx=SC.findIndex(s=>s.id===h);
+loadScenario(idx<0?0:idx,true);
+// hook para grabar el video localmente
+window.__demo={reel:function(i,spd){reel=true;document.body.classList.add('reel');loadScenario(i,true);speed=spd||1;window.__reelDone=false;playing=true;renderPlay();setTimeout(next,700);}};
+})();
+</script>
+</body>
+</html>
